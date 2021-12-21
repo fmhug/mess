@@ -1,5 +1,4 @@
 -i http://mirrors.aliyun.com/pypi/simple/
 --trusted-host mirrors.aliyun.com
 zerorpc==0.6.3
-python-dateutil==2.8.2
 requests==2.26.0

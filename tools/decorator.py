@@ -2,6 +2,9 @@
 
 from functools import wraps
 
+# Keep this just before your first function
+_imports = {key: value for key, value in globals().items() if not key.startswith('_')}
+
 
 # Retry decorator implemented with function
 def retry(times=3):
@@ -56,3 +59,18 @@ class Singleton:
         if cls._instance is None:
             cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
         return cls._instance
+
+
+# Lazy loading
+class Lazy:
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, cls):
+        val = self.func(instance)
+        setattr(instance, self.func.__name__, val)
+        return val
+
+
+# Keep this at the end of this script
+__all__ = [k for k, v in globals().items() if not k.startswith('_') and k not in _imports and k != '_imports']
