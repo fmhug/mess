@@ -1,16 +1,17 @@
 # coding: utf-8
 
-import os
 import sys
 import logging
-from logging import StreamHandler, Formatter, PercentStyle, DEBUG
+from logging import (
+    StreamHandler, Formatter, PercentStyle,
+    DEBUG, INFO, WARN, WARNING, ERROR, CRITICAL
+)
 from logging.handlers import TimedRotatingFileHandler
-from pathlib import Path
 
 
 colors = {
     'DEBUG': ('\033[34m', '\033[0m',),
-    'INFO': ('\033[30m', '\033[0m',),
+    'INFO': ('\033[0m', '\033[0m',),
     'WARNING': ('\033[33m', '\033[0m',),
     'WARN': ('\033[33m', '\033[0m',),
     'ERROR': ('\033[31m', '\033[0m',),
@@ -18,12 +19,22 @@ colors = {
 }
 
 
-class PyPercentStyle(PercentStyle):
+levels = {
+    'DEBUG': DEBUG,
+    'INFO': INFO,
+    'WARN': WARN,
+    'WARNING': WARNING,
+    'ERROR': ERROR,
+    'CRITICAL': CRITICAL,
+}
 
+
+class PyPercentStyle(PercentStyle):
     def __init__(self, fmt: str, stream=False):
         super().__init__(fmt)
         self.stream = stream
 
+    # Python 3.9
     def _format(self, record):
         if self.stream:
             pre, sub = colors[record.levelname]
@@ -31,78 +42,48 @@ class PyPercentStyle(PercentStyle):
         else:
             return self._fmt % record.__dict__
 
+    # Python 3.7
+    def format(self, record):
+        return self._format(record)
 
+
+# 需要注意不同Python版本logging的差异
 class PyFormatter(Formatter):
-
-    def __init__(self, fmt=None, datefmt=None, style='%', validate=True, stream=False):
-        super(PyFormatter, self).__init__()
-        # Rewrite style
-        self._style = PyPercentStyle(fmt, stream)
-
-
-_defaultFormatter = PyFormatter()
-
-
-class PyStreamHandler(StreamHandler):
-    pass
+    def __init__(self, fmt=None, datefmt=None, style='%', stream=False):
+        super(PyFormatter, self).__init__(fmt, datefmt, style)
+        self._style = PyPercentStyle(fmt, stream)  # Rewrite style
 
 
 class PyTimedRotatingFileHandler(TimedRotatingFileHandler):
-
-    def rotation_filename(self, default_name):
-        name_lst = default_name.split(os.sep)
-        file_lst = name_lst[-1].split('.')
-        file_lst[-2], file_lst[-1] = file_lst[-1], file_lst[-2]
-        name_lst[-1] = '.'.join(file_lst)
-        default_name = os.sep.join(name_lst)
-        if not callable(self.namer):
-            result = default_name
-        else:
-            result = self.namer(default_name)
-        return result
+    pass  # 可以重写相关的日志滚动
 
 
-class Logger:
+logger = logging.getLogger('log')
+logger.setLevel(DEBUG)
 
-    def __init__(self, name: str = 'log', path: str = ''):
-        # Log name
-        self.name = name
-        # Log path
-        self.path = Path(path) if path else Path().joinpath('.logs')
-        self.path.mkdir(exist_ok=True)
-        # Log formatter
-        self._formatter = "%(asctime)s %(levelname)s\t%(filename)s.%(funcName)s:%(lineno)d - %(message)s"
-        # Get logger
-        self.logger = logging.getLogger(name)
-        self.logger.setLevel(DEBUG)
-        # Add handler
-        self._add_file_handler()
-        self._add_stream_handler()
+form = "%(asctime)s %(levelname)s\t%(filename)s.%(funcName)s:%(lineno)d\t- %(message)s"
 
-    # Add stream handler
-    def _add_stream_handler(self):
-        stream_formatter = PyFormatter(self._formatter, stream=True)
-        stream_handler = PyStreamHandler(sys.stdout)
-        # stream_handler.setLevel(DEBUG)
-        stream_handler.setFormatter(stream_formatter)
-        self.logger.addHandler(stream_handler)
+stream_formatter = PyFormatter(form, stream=True)
+stream_handler = StreamHandler(sys.stdout)
+stream_handler.setLevel(DEBUG)
+stream_handler.setFormatter(stream_formatter)
+logger.addHandler(stream_handler)
 
-    # Add file handler
-    def _add_file_handler(self):
-        when = 'D'
-        interval = 1
-        backup_count = 10
-        log_path = self.path.joinpath(f'{self.name}.log')
-        file_formatter = PyFormatter(self._formatter, stream=False)
-        file_handler = PyTimedRotatingFileHandler(
-            log_path,
-            when=when,
-            interval=interval,
-            backupCount=backup_count
-        )
-        # file_handler.setLevel(DEBUG)
-        file_handler.setFormatter(file_formatter)
-        self.logger.addHandler(file_handler)
+file_formatter = PyFormatter(form, stream=False)
+file_handler = PyTimedRotatingFileHandler(
+    'log.log',
+    when='D',
+    interval=1,
+    backupCount=10,
+    encoding='utf-8'
+)
+file_handler.setLevel(DEBUG)
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
 
-
-logger = Logger().logger
+msg = '让朕看看打印出来的是什么效果'
+logger.debug(msg)
+logger.info(msg)
+logger.warning(msg)
+logger.error(msg)
+logger.error(msg)
