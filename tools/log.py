@@ -10,21 +10,21 @@ from logging.handlers import TimedRotatingFileHandler
 
 
 colors = {
-    'DEBUG': ('\033[34m', '\033[0m',),
-    'INFO': ('\033[0m', '\033[0m',),
-    'WARNING': ('\033[33m', '\033[0m',),
-    'WARN': ('\033[33m', '\033[0m',),
-    'ERROR': ('\033[31m', '\033[0m',),
+    'DEBUG':    ('\033[34m', '\033[0m',),
+    'INFO':     ('\033[0m',  '\033[0m',),
+    'WARNING':  ('\033[33m', '\033[0m',),
+    'WARN':     ('\033[33m', '\033[0m',),
+    'ERROR':    ('\033[31m', '\033[0m',),
     'CRITICAL': ('\033[31m', '\033[0m',),
 }
 
 
 levels = {
-    'DEBUG': DEBUG,
-    'INFO': INFO,
-    'WARN': WARN,
-    'WARNING': WARNING,
-    'ERROR': ERROR,
+    'DEBUG':    DEBUG,
+    'INFO':     INFO,
+    'WARN':     WARN,
+    'WARNING':  WARNING,
+    'ERROR':    ERROR,
     'CRITICAL': CRITICAL,
 }
 
@@ -86,4 +86,4 @@ logger.debug(msg)
 logger.info(msg)
 logger.warning(msg)
 logger.error(msg)
-logger.error(msg)
+logger.critical(msg)
