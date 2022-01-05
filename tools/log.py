@@ -19,16 +19,6 @@ colors = {
 }
 
 
-levels = {
-    'DEBUG':    DEBUG,
-    'INFO':     INFO,
-    'WARN':     WARN,
-    'WARNING':  WARNING,
-    'ERROR':    ERROR,
-    'CRITICAL': CRITICAL,
-}
-
-
 class PyPercentStyle(PercentStyle):
     def __init__(self, fmt: str, stream=False):
         super().__init__(fmt)
@@ -47,11 +37,21 @@ class PyPercentStyle(PercentStyle):
         return self._format(record)
 
 
-# 需要注意不同Python版本logging的差异
 class PyFormatter(Formatter):
     def __init__(self, fmt=None, datefmt=None, style='%', stream=False):
         super(PyFormatter, self).__init__(fmt, datefmt, style)
         self._style = PyPercentStyle(fmt, stream)  # Rewrite style
+
+
+class Py39Formatter(Formatter):
+    def __init__(self, fmt=None, datefmt=None, style='%', validate=True, stream=False):
+        super(Py39Formatter, self).__init__(fmt, datefmt, style, validate)
+        self._style = PyPercentStyle(fmt, stream)  # Rewrite style
+
+
+# 需要注意不同Python版本logging的差异
+if (sys.version_info.major == 3) and (sys.version_info.minor >= 9):
+    PyFormatter = Py39Formatter
 
 
 class PyTimedRotatingFileHandler(TimedRotatingFileHandler):
@@ -81,7 +81,7 @@ file_handler.setLevel(DEBUG)
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
-msg = '让朕看看打印出来的是什么效果'
+msg = 'Let\'s see what happened.'
 logger.debug(msg)
 logger.info(msg)
 logger.warning(msg)
